@@ -2,137 +2,74 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>KOPA TV Remote</title>
-  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Kopa TV Remote</title>
   <style>
-    * { box-sizing: border-box; touch-action: manipulation; user-select: none; }
-    body {
-      margin: 0; padding: 16px;
-      background: #0f1015; color: #fff;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      display: flex; flex-direction: column; align-items: center; min-height: 100vh;
-    }
-    .remote-card {
-      width: 100%; max-width: 360px;
-      background: #181920; border-radius: 24px;
-      padding: 20px; border: 1px solid rgba(255, 255, 255, 0.08);
-      display: flex; flex-direction: column; gap: 20px; align-items: center;
-    }
-    .status-bar {
-      font-size: 13px; color: #888899; display: flex; align-items: center; gap: 8px;
-    }
-    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #ff4b4b; }
-    .status-dot.connected { background: #00e676; }
-    
-    /* D-PAD STYLING */
-    .dpad-container {
-      position: relative; width: 220px; height: 220px;
-      background: #222430; border-radius: 50%;
-      display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
-      box-shadow: inset 0 2px 6px rgba(0,0,0,0.5), 0 4px 12px rgba(0,0,0,0.4);
-    }
-    .dpad-btn {
-      background: transparent; border: none; color: #ffffff;
-      font-size: 20px; font-weight: bold; cursor: pointer;
-      display: flex; justify-content: center; align-items: center;
-    }
-    .dpad-btn:active { background: rgba(255, 255, 255, 0.15); }
-    .dpad-up { grid-column: 2; grid-row: 1; border-radius: 100px 100px 0 0; }
-    .dpad-down { grid-column: 2; grid-row: 3; border-radius: 0 0 100px 100px; }
-    .dpad-left { grid-column: 1; grid-row: 2; border-radius: 100px 0 0 100px; }
-    .dpad-right { grid-column: 3; grid-row: 2; border-radius: 0 100px 100px 0; }
-    .dpad-center {
-      grid-column: 2; grid-row: 2;
-      background: #5865F2; border-radius: 50%;
-      font-size: 14px; letter-spacing: 0.5px;
-      box-shadow: 0 2px 8px rgba(88, 101, 242, 0.5);
-    }
-    .dpad-center:active { background: #4752c4; }
-
-    /* AUX NAVIGATION BUTTONS */
-    .action-row { display: flex; gap: 12px; width: 100%; }
-    .action-btn {
-      flex: 1; padding: 12px; background: #2a2c3a; color: #ccc;
-      border: none; border-radius: 12px; font-weight: 600; cursor: pointer;
-    }
-    .action-btn:active { background: #3b3e52; color: #fff; }
-
-    /* VOLUME SLIDER */
-    .volume-container { width: 100%; display: flex; flex-direction: column; gap: 8px; }
-    .volume-header { display: flex; justify-content: space-between; font-size: 13px; color: #aaa; }
-    input[type=range] {
-      width: 100%; accent-color: #5865F2; height: 6px; background: #2a2c3a; border-radius: 4px;
-    }
+    body { background: #0b0b0e; color: #fff; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; }
+    h2 { margin: 5px 0; font-size: 1.2rem; color: #e50914; }
+    #status { font-size: 0.8rem; color: #888899; margin-bottom: 20px; }
+    .pad { display: grid; grid-template-columns: 80px 80px 80px; grid-template-rows: 80px 80px 80px; gap: 12px; align-items: center; justify-content: center; }
+    button { background: #1c1c24; color: #fff; border: 1px solid rgba(255,255,255,0.1); font-size: 1.5rem; border-radius: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; box-shadow: 0 4px 10px rgba(0,0,0,0.4); }
+    button:active { background: #e50914; border-color: #ff1e2b; transform: scale(0.95); }
+    .up { grid-column: 2; grid-row: 1; }
+    .left { grid-column: 1; grid-row: 2; }
+    .select { grid-column: 2; grid-row: 2; background: #e50914; font-size: 1rem; font-weight: bold; }
+    .right { grid-column: 3; grid-row: 2; }
+    .down { grid-column: 2; grid-row: 3; }
+    .actions { display: flex; gap: 15px; margin-top: 25px; }
+    .btn-action { width: 110px; height: 45px; font-size: 0.9rem; border-radius: 12px; }
   </style>
 </head>
 <body>
 
-  <div class="remote-card">
-    <div class="status-bar">
-      <div id="dot" class="status-dot"></div>
-      <span id="statusText">Connecting to TV...</span>
-    </div>
+  <h2>KOPA REMOTE</h2>
+  <div id="status">Connecting to TV...</div>
 
-    <!-- D-PAD & CENTER SELECT -->
-    <div class="dpad-container">
-      <button class="dpad-btn dpad-up" onclick="sendCmd('KEY_UP')">▲</button>
-      <button class="dpad-btn dpad-left" onclick="sendCmd('KEY_LEFT')">◄</button>
-      <button class="dpad-btn dpad-center" onclick="sendCmd('KEY_SELECT')">OK</button>
-      <button class="dpad-btn dpad-right" onclick="sendCmd('KEY_RIGHT')">►</button>
-      <button class="dpad-btn dpad-down" onclick="sendCmd('KEY_DOWN')">▼</button>
-    </div>
-
-    <!-- NAVIGATION CONTROLS -->
-    <div class="action-row">
-      <button class="action-btn" onclick="sendCmd('KEY_BACK')">← Back</button>
-      <button class="action-btn" onclick="sendCmd('KEY_HOME')">⌂ Home</button>
-    </div>
-
-    <!-- VOLUME CONTROL SLIDER -->
-    <div class="volume-container">
-      <div class="volume-header">
-        <span>🔊 Device Volume</span>
-        <span id="volVal">100%</span>
-      </div>
-      <input type="range" id="volSlider" min="0" max="100" value="100" oninput="onVolumeChange(this.value)">
-    </div>
+  <div class="pad">
+    <button class="up" onclick="sendCmd('KEY_UP')">▲</button>
+    <button class="left" onclick="sendCmd('KEY_LEFT')">◀</button>
+    <button class="select" onclick="sendCmd('KEY_SELECT')">OK</button>
+    <button class="right" onclick="sendCmd('KEY_RIGHT')">▶</button>
+    <button class="down" onclick="sendCmd('KEY_DOWN')">▼</button>
   </div>
 
-<script>
-  let peer = new Peer();
-  let conn = null;
+  <div class="actions">
+    <button class="btn-action" onclick="sendCmd('KEY_BACK')">Back</button>
+    <button class="btn-action" onclick="sendCmd('KEY_HOME')">Home</button>
+  </div>
 
-  // TV Connection setup via URL param (e.g. index.html?id=KOPA_TV_DEFAULT)
-  const urlParams = new URLSearchParams(window.location.search);
-  const tvPeerId = urlParams.get('id') || 'KOPA_TV_DEFAULT';
+  <!-- PeerJS Library -->
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomKey = urlParams.get('id') || 'KOPA_TV_ROOM';
 
-  peer.on('open', () => {
-    connectToTV();
-  });
+    const peer = new Peer();
+    let conn = null;
 
-  function connectToTV() {
-    conn = peer.connect(tvPeerId);
-    conn.on('open', () => {
-      document.getElementById('dot').classList.add('connected');
-      document.getElementById('statusText').innerText = 'Connected to KopaHub TV';
+    peer.on('open', () => {
+      document.getElementById('status').innerText = "Linking to Room: " + roomKey;
+      conn = peer.connect(roomKey);
+
+      conn.on('open', () => {
+        document.getElementById('status').innerText = "Connected to TV ✅";
+        document.getElementById('status').style.color = "#00e676";
+      });
+
+      conn.on('error', () => {
+        document.getElementById('status').innerText = "Connection failed. Rescanning...";
+      });
     });
-    conn.on('close', () => {
-      document.getElementById('dot').classList.remove('connected');
-      document.getElementById('statusText').innerText = 'Disconnected';
-    });
-  }
 
-  function sendCmd(type, data = null) {
-    if (conn && conn.open) {
-      conn.send({ type, data });
+    function sendCmd(type) {
+      if (conn && conn.open) {
+        conn.send({ type: type });
+        if (navigator.vibrate) navigator.vibrate(40); // Haptic feedback on phone
+      } else {
+        document.getElementById('status').innerText = "Not connected! Reconnecting...";
+        conn = peer.connect(roomKey);
+      }
     }
-  }
-
-  function onVolumeChange(val) {
-    document.getElementById('volVal').innerText = val + '%';
-    sendCmd('SET_VOLUME', parseInt(val));
-  }
-</script>
+  </script>
 </body>
 </html>
