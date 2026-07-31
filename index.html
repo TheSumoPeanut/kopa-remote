@@ -3,38 +3,139 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>KopaHub Mobile Remote</title>
+  <title>KopaHub Sleek Remote</title>
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <style>
     * { box-sizing: border-box; touch-action: none; margin: 0; padding: 0; user-select: none; }
-    body { background: #0f0f12; color: #fff; font-family: system-ui, sans-serif; display: flex; flex-direction: column; height: 100vh; padding: 10px; }
-    header { padding: 12px; text-align: center; background: #1a1a24; font-weight: bold; font-size: 16px; color: #7289da; border-radius: 12px; margin-bottom: 10px; }
-    #trackpad { flex: 1; background: #14141d; border-radius: 16px; border: 2px dashed #2a2a38; display: flex; align-items: center; justify-content: center; color: #666; text-align: center; padding: 10px; font-weight: 500; }
-    #typing-preview { margin: 10px 0 5px 0; font-size: 14px; color: #4e5058; min-height: 20px; font-style: italic; }
-    input { padding: 14px; border-radius: 10px; border: 1px solid #2a2a38; background: #18191c; color: white; font-size: 16px; margin-bottom: 10px; user-select: text; touch-action: auto; }
-    input:focus { border-color: #5865F2; outline: none; }
+    body {
+      background: #090a0f;
+      color: #f2f3f5;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      padding: 14px;
+      gap: 12px;
+    }
+    
+    /* Sleek Status Bar */
+    header {
+      padding: 12px 16px;
+      text-align: center;
+      background: rgba(26, 27, 38, 0.8);
+      backdrop-filter: blur(12px);
+      font-weight: 600;
+      font-size: 14px;
+      letter-spacing: 0.5px;
+      color: #5865F2;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    }
+
+    /* Trackpad Box */
+    #trackpad {
+      flex: 1;
+      background: radial-gradient(circle at center, #161722 0%, #0d0e14 100%);
+      border-radius: 20px;
+      border: 1px solid rgba(88, 101, 242, 0.2);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #4f545c;
+      text-align: center;
+      box-shadow: inset 0 2px 10px rgba(0,0,0,0.6);
+      transition: border-color 0.3s ease;
+    }
+    #trackpad:active { border-color: #5865F2; }
+
+    /* Volume Slider Section */
+    .volume-container {
+      background: #12131c;
+      padding: 12px 16px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.05);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .volume-label { font-size: 13px; font-weight: bold; color: #b5bac1; min-width: 60px; }
+    .volume-slider {
+      flex: 1;
+      -webkit-appearance: none;
+      height: 6px;
+      border-radius: 3px;
+      background: #2b2d31;
+      outline: none;
+    }
+    .volume-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #5865F2;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(88, 101, 242, 0.6);
+    }
+    #vol-num { font-weight: bold; color: #5865F2; min-width: 28px; text-align: right; }
+
+    /* Input Box */
+    input {
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: #12131c;
+      color: #fff;
+      font-size: 15px;
+      user-select: text;
+      touch-action: auto;
+      transition: all 0.2s;
+    }
+    input:focus { border-color: #5865F2; outline: none; background: #161824; }
+
+    /* Buttons Layout */
     .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    button { background: #2a2a38; color: white; border: none; padding: 16px; font-size: 16px; font-weight: bold; border-radius: 12px; cursor: pointer; }
-    button:active { background: #5865F2; transform: scale(0.98); }
-    .kopa-btn { grid-column: span 2; background: #5865F2; }
-    .danger-btn { background: #d32f2f; }
-    .danger-btn:active { background: #b71c1c; }
+    button {
+      background: #1e1f29;
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.05);
+      padding: 14px;
+      font-size: 15px;
+      font-weight: 600;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    button:active { transform: scale(0.97); background: #2b2d3d; }
+    .kopa-btn { grid-column: span 2; background: #5865F2; border: none; box-shadow: 0 4px 14px rgba(88,101,242,0.4); }
+    .danger-btn { background: #2d181d; color: #ff4b4b; border-color: rgba(255,75,75,0.2); }
+    .danger-btn:active { background: #4a1f26; }
   </style>
 </head>
 <body>
   <header id="status">Connecting to KopaHub...</header>
 
-  <div id="trackpad">TRACKPAD<br><span style="font-size: 12px; color: #444;">Drag finger to move virtual mouse</span></div>
+  <div id="trackpad">
+    <span style="font-weight: 600; letter-spacing: 1px; color: #727d8e;">TRACKPAD</span>
+    <span style="font-size: 11px; color: #3f4450; margin-top: 4px;">Drag finger to navigate</span>
+  </div>
 
-  <div id="typing-preview">Last typed: <span id="typed-text" style="color: #5865F2;">None</span></div>
-  <input type="text" id="keyboard" placeholder="Tap to type text to TurboWarp..." />
+  <!-- Volume Slider (1 to 100) -->
+  <div class="volume-container">
+    <span class="volume-label">🔊 Vol</span>
+    <input type="range" id="volSlider" class="volume-slider" min="1" max="100" value="50">
+    <span id="vol-num">50</span>
+  </div>
+
+  <input type="text" id="keyboard" placeholder="Tap to type text..." />
 
   <div class="controls">
     <button id="leftClick">🖱️ Left Click</button>
     <button id="rightClick">👆 Right Click</button>
     <button id="kopaBtn" class="kopa-btn">🚀 Open KOPA App</button>
     <button id="disconnectBtn" class="danger-btn">🔌 Disconnect</button>
-    <button id="shutdownBtn" class="danger-btn">🛑 Power Off KOPA</button>
+    <button id="shutdownBtn" class="danger-btn">🛑 Power Off</button>
   </div>
 
   <script>
@@ -51,12 +152,11 @@
         });
         conn.on('close', () => {
           document.getElementById('status').innerText = "🔴 Disconnected";
-          document.getElementById('status').style.background = "#d32f2f";
         });
       }
     });
 
-    // Trackpad Logic
+    // Trackpad Movement
     const pad = document.getElementById('trackpad');
     let lastX = 0, lastY = 0;
 
@@ -75,17 +175,28 @@
       conn.send({ type: 'MOVE', dx: deltaX * 1.5, dy: deltaY * 1.5 });
     });
 
-    // Tap trackpad to left-click
     pad.addEventListener('click', () => {
       if (conn && conn.open) conn.send({ type: 'CLICK', button: 'left' });
     });
 
-    // Click Buttons
+    // Volume Slider Control
+    const volSlider = document.getElementById('volSlider');
+    const volNum = document.getElementById('vol-num');
+
+    volSlider.addEventListener('input', (e) => {
+      const volVal = e.target.value;
+      volNum.innerText = volVal;
+      if (conn && conn.open) {
+        conn.send({ type: 'VOLUME', value: parseInt(volVal, 10) });
+      }
+    });
+
+    // Buttons
     document.getElementById('leftClick').onclick = () => conn?.send({ type: 'CLICK', button: 'left' });
     document.getElementById('rightClick').onclick = () => conn?.send({ type: 'CLICK', button: 'right' });
     document.getElementById('kopaBtn').onclick = () => conn?.send({ type: 'REDIRECT_KOPA' });
 
-    // Danger Buttons
+    // Danger Actions
     document.getElementById('disconnectBtn').onclick = () => {
       if (conn && conn.open) {
         conn.send({ type: 'DISCONNECT' });
@@ -100,18 +211,9 @@
       }
     };
 
-    // Keyboard Input + Live Typing Feedback
-    const keyboardInput = document.getElementById('keyboard');
-    const typedTextDisplay = document.getElementById('typed-text');
-
-    keyboardInput.addEventListener('input', (e) => {
-      const val = e.target.value;
-      if (val.length > 0) {
-        typedTextDisplay.innerText = `"${val}"`;
-        if (conn && conn.open) {
-          conn.send({ type: 'TYPING', text: val });
-        }
-      }
+    // Keyboard Input
+    document.getElementById('keyboard').addEventListener('input', (e) => {
+      if (conn && conn.open) conn.send({ type: 'TYPING', text: e.target.value });
     });
   </script>
 </body>
