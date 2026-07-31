@@ -8,14 +8,18 @@
   <style>
     * { box-sizing: border-box; touch-action: none; margin: 0; padding: 0; user-select: none; }
     body { background: #0f0f12; color: #fff; font-family: system-ui, sans-serif; display: flex; flex-direction: column; height: 100vh; }
-    header { padding: 15px; text-align: center; background: #1a1a24; font-weight: bold; font-size: 18px; color: #7289da; border-bottom: 1px solid #2a2a38; }
+    header { padding: 15px; text-align: center; background: #1a1a24; font-weight: bold; font-size: 18px; color: #7289da; border-bottom: 1px solid #2a2a38; transition: background 0.3s; }
     #trackpad { flex: 1; background: #14141d; margin: 10px; border-radius: 16px; border: 2px dashed #2a2a38; display: flex; align-items: center; justify-content: center; color: #555; text-align: center; padding: 10px; }
     .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
     button { background: #2a2a38; color: white; border: none; padding: 16px; font-size: 16px; font-weight: bold; border-radius: 12px; }
     button:active { background: #7289da; }
+    
     .kopa-btn { grid-column: span 2; background: #5865F2; }
     .mic-btn { grid-column: span 2; background: #E91E63; transition: background 0.2s ease; }
     .mic-btn.listening { background: #FF5722; animation: pulse 1s infinite alternate; }
+    .danger-btn { background: #d32f2f; }
+    .danger-btn:active { background: #b71c1c; }
+    
     @keyframes pulse { from { opacity: 1; } to { opacity: 0.6; } }
     input { margin: 0 10px 10px; padding: 12px; border-radius: 8px; border: 1px solid #333; background: #222; color: white; font-size: 16px; }
   </style>
@@ -32,6 +36,8 @@
     <button id="leftClick">Left Click</button>
     <button id="rightClick">Right Click</button>
     <button id="kopaBtn" class="kopa-btn">🚀 Open KOPA App</button>
+    <button id="disconnectBtn" class="danger-btn">🔌 Disconnect</button>
+    <button id="shutdownBtn" class="danger-btn">🛑 Power Off KOPA</button>
   </div>
 
   <script>
@@ -46,6 +52,10 @@
         conn.on('open', () => {
           document.getElementById('status').innerText = "🟢 Connected to KopaHub";
         });
+        conn.on('close', () => {
+          document.getElementById('status').innerText = "🔴 Disconnected";
+          document.getElementById('status').style.background = "#d32f2f";
+        });
       }
     });
 
@@ -59,7 +69,7 @@
     });
 
     pad.addEventListener('touchmove', e => {
-      if (!conn) return;
+      if (!conn || !conn.open) return;
       const deltaX = e.touches[0].clientX - lastX;
       const deltaY = e.touches[0].clientY - lastY;
       lastX = e.touches[0].clientX;
@@ -68,18 +78,33 @@
       conn.send({ type: 'MOVE', dx: deltaX * 1.5, dy: deltaY * 1.5 });
     });
 
-    // Buttons
+    // Basic Buttons
     document.getElementById('leftClick').onclick = () => conn?.send({ type: 'CLICK', button: 'left' });
     document.getElementById('rightClick').onclick = () => conn?.send({ type: 'CLICK', button: 'right' });
     document.getElementById('kopaBtn').onclick = () => conn?.send({ type: 'REDIRECT_KOPA' });
 
+    // Danger Buttons (Disconnect & Shutdown)
+    document.getElementById('disconnectBtn').onclick = () => {
+      if (conn && conn.open) {
+        conn.send({ type: 'DISCONNECT' });
+        setTimeout(() => { peer.destroy(); document.getElementById('status').innerText = "🔌 Phone Disconnected"; }, 200);
+      }
+    };
+
+    document.getElementById('shutdownBtn').onclick = () => {
+      if (conn && conn.open) {
+        conn.send({ type: 'SHUTDOWN' });
+        setTimeout(() => { peer.destroy(); document.getElementById('status').innerText = "🛑 KOPA Shut Down"; }, 200);
+      }
+    };
+
     // Keyboard Input
     document.getElementById('keyboard').addEventListener('input', (e) => {
-      conn?.send({ type: 'TYPING', text: e.target.value });
+      if(conn && conn.open) conn.send({ type: 'TYPING', text: e.target.value });
       e.target.value = '';
     });
 
-    // 🎙️ Voice Recognition (Web Speech API)
+    // Voice Recognition
     const micBtn = document.getElementById('micBtn');
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -102,11 +127,10 @@
       recognition.onresult = (event) => {
         const spokenText = event.results[0][0].transcript;
         document.getElementById('status').innerText = `🗣️ "${spokenText}"`;
-        conn?.send({ type: 'VOICE_COMMAND', text: spokenText });
+        if(conn && conn.open) conn.send({ type: 'VOICE_COMMAND', text: spokenText });
       };
 
-      recognition.onerror = (e) => {
-        console.error("Speech Error:", e);
+      recognition.onerror = () => {
         micBtn.classList.remove('listening');
         micBtn.innerText = "🎙️ Tap to Speak";
       };
