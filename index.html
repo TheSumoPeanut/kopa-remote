@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>KopaHub Mobile Remote</title>
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+  <style>
+    * { box-sizing: border-box; touch-action: none; margin: 0; padding: 0; user-select: none; }
+    body { background: #0f0f12; color: #fff; font-family: system-ui, sans-serif; display: flex; flex-direction: column; height: 100vh; }
+    header { padding: 15px; text-align: center; background: #1a1a24; font-weight: bold; font-size: 18px; color: #7289da; border-bottom: 1px solid #2a2a38; }
+    #trackpad { flex: 1; background: #14141d; margin: 10px; border-radius: 16px; border: 2px dashed #2a2a38; display: flex; align-items: center; justify-content: center; color: #555; text-align: center; padding: 10px; }
+    .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
+    button { background: #2a2a38; color: white; border: none; padding: 16px; font-size: 16px; font-weight: bold; border-radius: 12px; }
+    button:active { background: #7289da; }
+    .kopa-btn { grid-column: span 2; background: #5865F2; }
+    .mic-btn { grid-column: span 2; background: #E91E63; transition: background 0.2s ease; }
+    .mic-btn.listening { background: #FF5722; animation: pulse 1s infinite alternate; }
+    @keyframes pulse { from { opacity: 1; } to { opacity: 0.6; } }
+    input { margin: 0 10px 10px; padding: 12px; border-radius: 8px; border: 1px solid #333; background: #222; color: white; font-size: 16px; }
+  </style>
+</head>
+<body>
+  <header id="status">Connecting to KopaHub...</header>
+
+  <div id="trackpad">TRACKPAD (Drag finger to move mouse)</div>
+
+  <input type="text" id="keyboard" placeholder="Tap here to type text..." />
+
+  <div class="controls">
+    <button id="micBtn" class="mic-btn">🎙️ Hold / Tap to Speak</button>
+    <button id="leftClick">Left Click</button>
+    <button id="rightClick">Right Click</button>
+    <button id="kopaBtn" class="kopa-btn">🚀 Open KOPA App</button>
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const hostId = urlParams.get('room');
+    const peer = new Peer();
+    let conn = null;
+
+    peer.on('open', () => {
+      if (hostId) {
+        conn = peer.connect(hostId);
+        conn.on('open', () => {
+          document.getElementById('status').innerText = "🟢 Connected to KopaHub";
+        });
+      }
+    });
+
+    // Trackpad Logic
+    const pad = document.getElementById('trackpad');
+    let lastX = 0, lastY = 0;
+
+    pad.addEventListener('touchstart', e => {
+      lastX = e.touches[0].clientX;
+      lastY = e.touches[0].clientY;
+    });
+
+    pad.addEventListener('touchmove', e => {
+      if (!conn) return;
+      const deltaX = e.touches[0].clientX - lastX;
+      const deltaY = e.touches[0].clientY - lastY;
+      lastX = e.touches[0].clientX;
+      lastY = e.touches[0].clientY;
+
+      conn.send({ type: 'MOVE', dx: deltaX * 1.5, dy: deltaY * 1.5 });
+    });
+
+    // Buttons
+    document.getElementById('leftClick').onclick = () => conn?.send({ type: 'CLICK', button: 'left' });
+    document.getElementById('rightClick').onclick = () => conn?.send({ type: 'CLICK', button: 'right' });
+    document.getElementById('kopaBtn').onclick = () => conn?.send({ type: 'REDIRECT_KOPA' });
+
+    // Keyboard Input
+    document.getElementById('keyboard').addEventListener('input', (e) => {
+      conn?.send({ type: 'TYPING', text: e.target.value });
+      e.target.value = '';
+    });
+
+    // 🎙️ Voice Recognition (Web Speech API)
+    const micBtn = document.getElementById('micBtn');
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+
+      micBtn.onclick = () => {
+        try {
+          recognition.start();
+          micBtn.classList.add('listening');
+          micBtn.innerText = "🔴 Listening...";
+        } catch (err) {
+          recognition.stop();
+        }
+      };
+
+      recognition.onresult = (event) => {
+        const spokenText = event.results[0][0].transcript;
+        document.getElementById('status').innerText = `🗣️ "${spokenText}"`;
+        conn?.send({ type: 'VOICE_COMMAND', text: spokenText });
+      };
+
+      recognition.onerror = (e) => {
+        console.error("Speech Error:", e);
+        micBtn.classList.remove('listening');
+        micBtn.innerText = "🎙️ Tap to Speak";
+      };
+
+      recognition.onend = () => {
+        micBtn.classList.remove('listening');
+        micBtn.innerText = "🎙️ Tap to Speak";
+      };
+    } else {
+      micBtn.innerText = "❌ Voice Not Supported";
+      micBtn.style.opacity = "0.5";
+    }
+  </script>
+</body>
+</html>
