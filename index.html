@@ -50,7 +50,7 @@
     }
     .dpad-center:active { background: #4752c4; }
 
-    /* ACTION BUTTONS */
+    /* AUX NAVIGATION BUTTONS */
     .action-row { display: flex; gap: 12px; width: 100%; }
     .action-btn {
       flex: 1; padding: 12px; background: #2a2c3a; color: #ccc;
@@ -63,17 +63,6 @@
     .volume-header { display: flex; justify-content: space-between; font-size: 13px; color: #aaa; }
     input[type=range] {
       width: 100%; accent-color: #5865F2; height: 6px; background: #2a2c3a; border-radius: 4px;
-    }
-
-    /* MEDIA SEARCH INPUT */
-    .search-box { display: flex; gap: 8px; width: 100%; }
-    .search-box input {
-      flex: 1; padding: 10px 14px; background: #222430; border: 1px solid #333;
-      border-radius: 10px; color: #fff; outline: none; font-size: 14px;
-    }
-    .search-box button {
-      padding: 10px 16px; background: #E50914; color: #fff; border: none;
-      border-radius: 10px; font-weight: bold; cursor: pointer;
     }
   </style>
 </head>
@@ -94,7 +83,7 @@
       <button class="dpad-btn dpad-down" onclick="sendCmd('KEY_DOWN')">▼</button>
     </div>
 
-    <!-- AUX NAVIGATION -->
+    <!-- NAVIGATION CONTROLS -->
     <div class="action-row">
       <button class="action-btn" onclick="sendCmd('KEY_BACK')">← Back</button>
       <button class="action-btn" onclick="sendCmd('KEY_HOME')">⌂ Home</button>
@@ -108,19 +97,13 @@
       </div>
       <input type="range" id="volSlider" min="0" max="100" value="100" oninput="onVolumeChange(this.value)">
     </div>
-
-    <!-- MEDIA SEARCH / PLAY LINK -->
-    <div class="search-box">
-      <input type="text" id="mediaInput" placeholder="Search YouTube or paste URL..." />
-      <button onclick="sendMedia()">Play</button>
-    </div>
   </div>
 
 <script>
   let peer = new Peer();
   let conn = null;
 
-  // TV Connection setup via URL param (e.g. index.html?id=KOPA_TV_ROOM)
+  // TV Connection setup via URL param (e.g. index.html?id=KOPA_TV_DEFAULT)
   const urlParams = new URLSearchParams(window.location.search);
   const tvPeerId = urlParams.get('id') || 'KOPA_TV_DEFAULT';
 
@@ -149,13 +132,6 @@
   function onVolumeChange(val) {
     document.getElementById('volVal').innerText = val + '%';
     sendCmd('SET_VOLUME', parseInt(val));
-  }
-
-  function sendMedia() {
-    const val = document.getElementById('mediaInput').value;
-    if (val) {
-      sendCmd('PLAY_MEDIA', val);
-    }
   }
 </script>
 </body>
