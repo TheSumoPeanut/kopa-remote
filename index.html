@@ -3,218 +3,160 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>KopaHub Sleek Remote</title>
+  <title>KOPA TV Remote</title>
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <style>
-    * { box-sizing: border-box; touch-action: none; margin: 0; padding: 0; user-select: none; }
+    * { box-sizing: border-box; touch-action: manipulation; user-select: none; }
     body {
-      background: #090a0f;
-      color: #f2f3f5;
+      margin: 0; padding: 16px;
+      background: #0f1015; color: #fff;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      padding: 14px;
-      gap: 12px;
+      display: flex; flex-direction: column; align-items: center; min-height: 100vh;
     }
+    .remote-card {
+      width: 100%; max-width: 360px;
+      background: #181920; border-radius: 24px;
+      padding: 20px; border: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex; flex-direction: column; gap: 20px; align-items: center;
+    }
+    .status-bar {
+      font-size: 13px; color: #888899; display: flex; align-items: center; gap: 8px;
+    }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #ff4b4b; }
+    .status-dot.connected { background: #00e676; }
     
-    /* Sleek Status Bar */
-    header {
-      padding: 12px 16px;
-      text-align: center;
-      background: rgba(26, 27, 38, 0.8);
-      backdrop-filter: blur(12px);
-      font-weight: 600;
-      font-size: 14px;
-      letter-spacing: 0.5px;
-      color: #5865F2;
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 14px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    /* D-PAD STYLING */
+    .dpad-container {
+      position: relative; width: 220px; height: 220px;
+      background: #222430; border-radius: 50%;
+      display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.5), 0 4px 12px rgba(0,0,0,0.4);
+    }
+    .dpad-btn {
+      background: transparent; border: none; color: #ffffff;
+      font-size: 20px; font-weight: bold; cursor: pointer;
+      display: flex; justify-content: center; align-items: center;
+    }
+    .dpad-btn:active { background: rgba(255, 255, 255, 0.15); }
+    .dpad-up { grid-column: 2; grid-row: 1; border-radius: 100px 100px 0 0; }
+    .dpad-down { grid-column: 2; grid-row: 3; border-radius: 0 0 100px 100px; }
+    .dpad-left { grid-column: 1; grid-row: 2; border-radius: 100px 0 0 100px; }
+    .dpad-right { grid-column: 3; grid-row: 2; border-radius: 0 100px 100px 0; }
+    .dpad-center {
+      grid-column: 2; grid-row: 2;
+      background: #5865F2; border-radius: 50%;
+      font-size: 14px; letter-spacing: 0.5px;
+      box-shadow: 0 2px 8px rgba(88, 101, 242, 0.5);
+    }
+    .dpad-center:active { background: #4752c4; }
+
+    /* ACTION BUTTONS */
+    .action-row { display: flex; gap: 12px; width: 100%; }
+    .action-btn {
+      flex: 1; padding: 12px; background: #2a2c3a; color: #ccc;
+      border: none; border-radius: 12px; font-weight: 600; cursor: pointer;
+    }
+    .action-btn:active { background: #3b3e52; color: #fff; }
+
+    /* VOLUME SLIDER */
+    .volume-container { width: 100%; display: flex; flex-direction: column; gap: 8px; }
+    .volume-header { display: flex; justify-content: space-between; font-size: 13px; color: #aaa; }
+    input[type=range] {
+      width: 100%; accent-color: #5865F2; height: 6px; background: #2a2c3a; border-radius: 4px;
     }
 
-    /* Trackpad Box */
-    #trackpad {
-      flex: 1;
-      background: radial-gradient(circle at center, #161722 0%, #0d0e14 100%);
-      border-radius: 20px;
-      border: 1px solid rgba(88, 101, 242, 0.2);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      color: #4f545c;
-      text-align: center;
-      box-shadow: inset 0 2px 10px rgba(0,0,0,0.6);
-      transition: border-color 0.3s ease;
+    /* MEDIA SEARCH INPUT */
+    .search-box { display: flex; gap: 8px; width: 100%; }
+    .search-box input {
+      flex: 1; padding: 10px 14px; background: #222430; border: 1px solid #333;
+      border-radius: 10px; color: #fff; outline: none; font-size: 14px;
     }
-    #trackpad:active { border-color: #5865F2; }
-
-    /* Volume Slider Section */
-    .volume-container {
-      background: #12131c;
-      padding: 12px 16px;
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,0.05);
-      display: flex;
-      align-items: center;
-      gap: 12px;
+    .search-box button {
+      padding: 10px 16px; background: #E50914; color: #fff; border: none;
+      border-radius: 10px; font-weight: bold; cursor: pointer;
     }
-    .volume-label { font-size: 13px; font-weight: bold; color: #b5bac1; min-width: 60px; }
-    .volume-slider {
-      flex: 1;
-      -webkit-appearance: none;
-      height: 6px;
-      border-radius: 3px;
-      background: #2b2d31;
-      outline: none;
-    }
-    .volume-slider::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: #5865F2;
-      cursor: pointer;
-      box-shadow: 0 0 10px rgba(88, 101, 242, 0.6);
-    }
-    #vol-num { font-weight: bold; color: #5865F2; min-width: 28px; text-align: right; }
-
-    /* Input Box */
-    input {
-      padding: 14px 16px;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: #12131c;
-      color: #fff;
-      font-size: 15px;
-      user-select: text;
-      touch-action: auto;
-      transition: all 0.2s;
-    }
-    input:focus { border-color: #5865F2; outline: none; background: #161824; }
-
-    /* Buttons Layout */
-    .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    button {
-      background: #1e1f29;
-      color: #fff;
-      border: 1px solid rgba(255,255,255,0.05);
-      padding: 14px;
-      font-size: 15px;
-      font-weight: 600;
-      border-radius: 14px;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-    button:active { transform: scale(0.97); background: #2b2d3d; }
-    .kopa-btn { grid-column: span 2; background: #5865F2; border: none; box-shadow: 0 4px 14px rgba(88,101,242,0.4); }
-    .danger-btn { background: #2d181d; color: #ff4b4b; border-color: rgba(255,75,75,0.2); }
-    .danger-btn:active { background: #4a1f26; }
   </style>
 </head>
 <body>
-  <header id="status">Connecting to KopaHub...</header>
 
-  <div id="trackpad">
-    <span style="font-weight: 600; letter-spacing: 1px; color: #727d8e;">TRACKPAD</span>
-    <span style="font-size: 11px; color: #3f4450; margin-top: 4px;">Drag finger to navigate</span>
+  <div class="remote-card">
+    <div class="status-bar">
+      <div id="dot" class="status-dot"></div>
+      <span id="statusText">Connecting to TV...</span>
+    </div>
+
+    <!-- D-PAD & CENTER SELECT -->
+    <div class="dpad-container">
+      <button class="dpad-btn dpad-up" onclick="sendCmd('KEY_UP')">▲</button>
+      <button class="dpad-btn dpad-left" onclick="sendCmd('KEY_LEFT')">◄</button>
+      <button class="dpad-btn dpad-center" onclick="sendCmd('KEY_SELECT')">OK</button>
+      <button class="dpad-btn dpad-right" onclick="sendCmd('KEY_RIGHT')">►</button>
+      <button class="dpad-btn dpad-down" onclick="sendCmd('KEY_DOWN')">▼</button>
+    </div>
+
+    <!-- AUX NAVIGATION -->
+    <div class="action-row">
+      <button class="action-btn" onclick="sendCmd('KEY_BACK')">← Back</button>
+      <button class="action-btn" onclick="sendCmd('KEY_HOME')">⌂ Home</button>
+    </div>
+
+    <!-- VOLUME CONTROL SLIDER -->
+    <div class="volume-container">
+      <div class="volume-header">
+        <span>🔊 Device Volume</span>
+        <span id="volVal">100%</span>
+      </div>
+      <input type="range" id="volSlider" min="0" max="100" value="100" oninput="onVolumeChange(this.value)">
+    </div>
+
+    <!-- MEDIA SEARCH / PLAY LINK -->
+    <div class="search-box">
+      <input type="text" id="mediaInput" placeholder="Search YouTube or paste URL..." />
+      <button onclick="sendMedia()">Play</button>
+    </div>
   </div>
 
-  <!-- Volume Slider (1 to 100) -->
-  <div class="volume-container">
-    <span class="volume-label">🔊 Vol</span>
-    <input type="range" id="volSlider" class="volume-slider" min="1" max="100" value="50">
-    <span id="vol-num">50</span>
-  </div>
+<script>
+  let peer = new Peer();
+  let conn = null;
 
-  <input type="text" id="keyboard" placeholder="Tap to type text..." />
+  // TV Connection setup via URL param (e.g. index.html?id=KOPA_TV_ROOM)
+  const urlParams = new URLSearchParams(window.location.search);
+  const tvPeerId = urlParams.get('id') || 'KOPA_TV_DEFAULT';
 
-  <div class="controls">
-    <button id="leftClick">🖱️ Left Click</button>
-    <button id="rightClick">👆 Right Click</button>
-    <button id="kopaBtn" class="kopa-btn">🚀 KOPA </button>
-    <button id="disconnectBtn" class="danger-btn">🔌 Disconnect</button>
-    <button id="shutdownBtn" class="danger-btn">🛑 Power Off</button>
-  </div>
+  peer.on('open', () => {
+    connectToTV();
+  });
 
-  <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const hostId = urlParams.get('room');
-    const peer = new Peer();
-    let conn = null;
-
-    peer.on('open', () => {
-      if (hostId) {
-        conn = peer.connect(hostId);
-        conn.on('open', () => {
-          document.getElementById('status').innerText = "🟢 Connected to KopaHub";
-        });
-        conn.on('close', () => {
-          document.getElementById('status').innerText = "🔴 Disconnected";
-        });
-      }
+  function connectToTV() {
+    conn = peer.connect(tvPeerId);
+    conn.on('open', () => {
+      document.getElementById('dot').classList.add('connected');
+      document.getElementById('statusText').innerText = 'Connected to KopaHub TV';
     });
-
-    // Trackpad Movement
-    const pad = document.getElementById('trackpad');
-    let lastX = 0, lastY = 0;
-
-    pad.addEventListener('touchstart', e => {
-      lastX = e.touches[0].clientX;
-      lastY = e.touches[0].clientY;
+    conn.on('close', () => {
+      document.getElementById('dot').classList.remove('connected');
+      document.getElementById('statusText').innerText = 'Disconnected';
     });
+  }
 
-    pad.addEventListener('touchmove', e => {
-      if (!conn || !conn.open) return;
-      const deltaX = e.touches[0].clientX - lastX;
-      const deltaY = e.touches[0].clientY - lastY;
-      lastX = e.touches[0].clientX;
-      lastY = e.touches[0].clientY;
+  function sendCmd(type, data = null) {
+    if (conn && conn.open) {
+      conn.send({ type, data });
+    }
+  }
 
-      conn.send({ type: 'MOVE', dx: deltaX * 1.5, dy: deltaY * 1.5 });
-    });
+  function onVolumeChange(val) {
+    document.getElementById('volVal').innerText = val + '%';
+    sendCmd('SET_VOLUME', parseInt(val));
+  }
 
-    pad.addEventListener('click', () => {
-      if (conn && conn.open) conn.send({ type: 'CLICK', button: 'left' });
-    });
-
-    // Volume Slider Control
-    const volSlider = document.getElementById('volSlider');
-    const volNum = document.getElementById('vol-num');
-
-    volSlider.addEventListener('input', (e) => {
-      const volVal = e.target.value;
-      volNum.innerText = volVal;
-      if (conn && conn.open) {
-        conn.send({ type: 'VOLUME', value: parseInt(volVal, 10) });
-      }
-    });
-
-    // Buttons
-    document.getElementById('leftClick').onclick = () => conn?.send({ type: 'CLICK', button: 'left' });
-    document.getElementById('rightClick').onclick = () => conn?.send({ type: 'CLICK', button: 'right' });
-    document.getElementById('kopaBtn').onclick = () => conn?.send({ type: 'REDIRECT_KOPA' });
-
-    // Danger Actions
-    document.getElementById('disconnectBtn').onclick = () => {
-      if (conn && conn.open) {
-        conn.send({ type: 'DISCONNECT' });
-        setTimeout(() => { peer.destroy(); document.getElementById('status').innerText = "🔌 Phone Disconnected"; }, 200);
-      }
-    };
-
-    document.getElementById('shutdownBtn').onclick = () => {
-      if (conn && conn.open) {
-        conn.send({ type: 'SHUTDOWN' });
-        setTimeout(() => { peer.destroy(); document.getElementById('status').innerText = "🛑 KOPA Shut Down"; }, 200);
-      }
-    };
-
-    // Keyboard Input
-    document.getElementById('keyboard').addEventListener('input', (e) => {
-      if (conn && conn.open) conn.send({ type: 'TYPING', text: e.target.value });
-    });
-  </script>
+  function sendMedia() {
+    const val = document.getElementById('mediaInput').value;
+    if (val) {
+      sendCmd('PLAY_MEDIA', val);
+    }
+  }
+</script>
 </body>
 </html>
